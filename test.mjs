@@ -50,3 +50,14 @@ test('local HTTP API saves notes, rejects invalid writes and serves the website'
  assert.equal((await fetch(base+'/not-a-file')).status,404);
  const after=await load(dataPath);assert.equal(after.leads[0].checkedAt,before.leads[0].checkedAt);assert.deepEqual(after.scans,before.scans);
 });
+
+// Verify the real countdown logic at the date change and the US daylight-saving fold.
+test('scan cadence changes at Central midnight on November 1, including DST',async()=>{
+ const {scanTiming,HOURLY_START}=await import('./public/schedule.js');
+ const last={at:'2026-11-01T04:30:00Z'};
+ assert.equal(scanTiming(last,HOURLY_START-1).intervalHours,3);
+ assert.equal(scanTiming(last,HOURLY_START-1).nextAt,HOURLY_START);
+ assert.equal(scanTiming(last,HOURLY_START).intervalHours,1);
+ assert.equal(scanTiming(last,HOURLY_START).nextAt,HOURLY_START+3600000);
+ assert.equal(scanTiming({at:'2026-11-01T06:30:00Z'},Date.parse('2026-11-01T07:00:00Z')).nextAt,Date.parse('2026-11-01T07:30:00Z'));
+});

@@ -25,7 +25,7 @@ export function createServer({ dataPath = defaultDataPath } = {}) {
         return reply(200, saved);
       }
       if (req.method !== 'GET' && req.method !== 'HEAD') return reply(405, { error: 'Method not supported.' });
-      const routes = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'] };
+      const routes = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/schedule.js': ['schedule.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'] };
       const asset = routes[url.pathname];
       if (!asset) return reply(404, { error: 'Page not found.' });
       const contents = await fs.readFile(new URL(asset[0], publicDir));

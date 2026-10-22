@@ -19,7 +19,7 @@ Open [http://127.0.0.1:4317](http://127.0.0.1:4317). On macOS, run `chmod +x "St
 - Open the original LinkedIn post and inspect evidence on demand.
 - Save outreach status and notes locally.
 - Review the complete scan log with queries and coverage limitations.
-- See a countdown to the next expected three-hour check. It is an estimate; the app does not perform LinkedIn searches or guarantee an exact scan start time. An external research process must import new scan results.
+- See a countdown to the next expected check (every three hours through October 31, 2026, then hourly starting November 1 at midnight US Central). It is an estimate; the app does not perform LinkedIn searches or guarantee an exact scan start time. An external research process must import new scan results.
 
 ## Data stays local
 
