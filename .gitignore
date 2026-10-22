@@ -1,0 +1,11 @@
+# Personal tracker data and machine-specific settings
+.local-config.json
+.env
+.env.*
+data/
+work/
+*.log
+*.pending
+*.website.lock
+node_modules/
+.DS_Store
