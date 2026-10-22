@@ -1,6 +1,6 @@
 # Intern Host Finder
 
-A simple local website for tracking Google SWE internship hosts. Black background, white text, a spreadsheet-style directory, and red labels for unfavorable statuses.
+A simple local website for tracking Google SWE internship hosts. Black background, white text, a spreadsheet-style directory, and red Closed labels and green Open labels.
 
 ## Run locally
 
@@ -10,7 +10,7 @@ Requires Node.js 20 or newer. No dependencies to install.
 npm start
 ```
 
-Open [http://127.0.0.1:4317](http://127.0.0.1:4317). On macOS, you can also double-click **Start Intern Host Finder.command**. Keep the server running while using the tracker.
+Open [http://127.0.0.1:4317](http://127.0.0.1:4317). On macOS, run `chmod +x "Start Intern Host Finder.command"` once after downloading, then double-click the launcher. Keep the server running while using the tracker.
 
 ## Features
 
