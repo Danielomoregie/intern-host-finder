@@ -1,3 +1,4 @@
+import { scanTiming } from '/schedule.js';
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const statuses = ['Not contacted','Contacted','Replied','Not a fit','Matched'];
@@ -16,14 +17,15 @@ function showView() {
 }
 function updateCountdown() {
  const last=data.lastSearch;
+ const timing=scanTiming(last);
  if(!last){$('#countdown').textContent='Not scheduled';$('#timer-caption').textContent='No previous scan recorded';return;}
- const next=new Date(last.scheduledFor || last.at).getTime()+3*60*60*1000;
+ const next=timing.nextAt;
  const remaining=Math.max(0,Math.ceil((next-Date.now())/1000));
  if(!remaining){$('#countdown').textContent='Due now';$('#countdown').classList.add('bad');$('#timer-caption').textContent='Waiting for the next Cody check';return;}
  $('#countdown').classList.remove('bad');
  const hours=Math.floor(remaining/3600), minutes=Math.floor(remaining%3600/60), seconds=remaining%60;
  $('#countdown').textContent=[hours,minutes,seconds].map(n=>String(n).padStart(2,'0')).join(':');
- $('#timer-caption').textContent='Estimated · about every 3 hours';
+ $('#timer-caption').textContent=`Estimated · about every ${timing.intervalHours} ${timing.intervalHours===1?'hour':'hours'}`;
 }
 function renderSummary() {
  const open=data.leads.filter(l=>l.actionable).length;
