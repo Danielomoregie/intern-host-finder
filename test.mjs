@@ -51,13 +51,12 @@ test('local HTTP API saves notes, rejects invalid writes and serves the website'
  const after=await load(dataPath);assert.equal(after.leads[0].checkedAt,before.leads[0].checkedAt);assert.deepEqual(after.scans,before.scans);
 });
 
-// Verify the real countdown logic at the date change and the US daylight-saving fold.
-test('scan cadence changes at Central midnight on November 1, including DST',async()=>{
- const {scanTiming,HOURLY_START}=await import('./public/schedule.js');
- const last={at:'2026-11-01T04:30:00Z'};
- assert.equal(scanTiming(last,HOURLY_START-1).intervalHours,3);
- assert.equal(scanTiming(last,HOURLY_START-1).nextAt,HOURLY_START);
- assert.equal(scanTiming(last,HOURLY_START).intervalHours,1);
- assert.equal(scanTiming(last,HOURLY_START).nextAt,HOURLY_START+3600000);
- assert.equal(scanTiming({at:'2026-11-01T06:30:00Z'},Date.parse('2026-11-01T07:00:00Z')).nextAt,Date.parse('2026-11-01T07:30:00Z'));
+test('scan cadence is every 30 minutes immediately and stays consistent across DST',async()=>{
+ const {scanTiming,CADENCE_START}=await import('./public/schedule.js');
+ assert.equal(scanTiming({at:'2026-10-25T00:16:21Z'}).intervalMinutes,30);
+ assert.equal(scanTiming({at:'2026-10-25T00:16:21Z'}).nextAt,CADENCE_START+1800000);
+ assert.equal(scanTiming({at:'2026-10-25T04:10:00Z',scheduledFor:'2026-10-25T04:00:00Z'}).nextAt,Date.parse('2026-10-25T04:30:00Z'));
+ assert.equal(scanTiming({at:'2026-11-01T06:30:00Z'}).nextAt,Date.parse('2026-11-01T07:00:00Z'));
+ assert.deepEqual(scanTiming(null),{intervalMinutes:30,nextAt:null});
+ assert.deepEqual(scanTiming({at:'invalid'}),{intervalMinutes:30,nextAt:null});
 });

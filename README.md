@@ -10,7 +10,15 @@ Requires Node.js 20 or newer. No dependencies to install.
 npm start
 ```
 
-Open [http://127.0.0.1:4317](http://127.0.0.1:4317). On macOS, run `chmod +x "Start Intern Host Finder.command"` once after downloading, then double-click the launcher. Keep the server running while using the tracker.
+Open [http://127.0.0.1:4317](http://127.0.0.1:4317). `npm start` runs the server in the current terminal.
+
+### Keep the website running on macOS
+
+Double-click `Start Intern Host Finder.command`, or run `npm run background:install`. The launcher installs a per-user macOS LaunchAgent, starts the website immediately, and opens it in your browser. You can close the launcher and ChatGPT; macOS starts the website at login and restarts it if it crashes. Keep this project folder and Node.js in place. After downloading, you may need to run `chmod +x "Start Intern Host Finder.command"` once.
+
+Use `npm run background:status` to check the service or `npm run background:uninstall` to stop it and remove automatic startup. Uninstalling the service keeps your leads and notes. Logs stay in the ignored `work/server.log` and `work/server-error.log` files. The service listens only on `127.0.0.1:4317`, with no public hosting or external dependencies.
+
+The Mac must be on and logged into your account; the website is unavailable while the computer sleeps or is shut down. **This background service keeps the website available, but it does not search LinkedIn.** The existing signed-in Cody scan task still needs the ChatGPT desktop app running. A closed app can leave the scan countdown overdue; reloading the website only shows the latest saved results.
 
 ## Features
 
@@ -19,7 +27,7 @@ Open [http://127.0.0.1:4317](http://127.0.0.1:4317). On macOS, run `chmod +x "St
 - Open the original LinkedIn post and inspect evidence on demand.
 - Save outreach status and notes locally.
 - Review the complete scan log with queries and coverage limitations.
-- See a countdown to the next expected check (every three hours through October 31, 2026, then hourly starting November 1 at midnight US Central). It is an estimate; the app does not perform LinkedIn searches or guarantee an exact scan start time. An external research process must import new scan results.
+- See a countdown to the next expected check (every 30 minutes, effective October 24, 2026, US Central). It is an estimate; the app does not perform LinkedIn searches or guarantee an exact scan start time. An external research process must import new scan results.
 
 ## Data stays local
 

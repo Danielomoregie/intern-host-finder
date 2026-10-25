@@ -1,1 +1,1 @@
-{"name":"intern-host-finder","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test test.mjs"}}
+{"name":"intern-host-finder","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test test.mjs","background:install":"node macos-service.mjs install","background:status":"node macos-service.mjs status","background:uninstall":"node macos-service.mjs uninstall"}}
