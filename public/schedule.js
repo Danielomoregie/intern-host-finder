@@ -1,14 +1,10 @@
-// The local research automation changes cadence at midnight US Central on Nov 1.
-export const HOURLY_START = Date.parse('2026-11-01T00:00:00-05:00');
-export function scanTiming(last, now = Date.now()) {
-  const hourly = now >= HOURLY_START;
-  const intervalHours = hourly ? 1 : 3;
+// Daniel requested 30-minute research immediately on October 24 (US Central).
+// Use the saved automation update time for the first estimated check.
+export const CADENCE_START = 1792896442456;
+export function scanTiming(last) {
+  const intervalMinutes = 30;
   const previous = last ? Date.parse(last.scheduledFor || last.at) : NaN;
-  if (!Number.isFinite(previous)) return { intervalHours, nextAt: null };
-  // Before the change, never count past the changeover. After it, the first
-  // hourly check is expected no later than an hour after the changeover.
-  const nextAt = hourly
-    ? Math.max(previous, HOURLY_START) + 3600000
-    : Math.min(previous + 3 * 3600000, HOURLY_START);
-  return { intervalHours, nextAt };
+  if (!Number.isFinite(previous)) return { intervalMinutes, nextAt: null };
+  const nextAt = Math.max(previous, CADENCE_START) + intervalMinutes * 60000;
+  return { intervalMinutes, nextAt };
 }

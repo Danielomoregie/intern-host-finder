@@ -25,7 +25,7 @@ function updateCountdown() {
  $('#countdown').classList.remove('bad');
  const hours=Math.floor(remaining/3600), minutes=Math.floor(remaining%3600/60), seconds=remaining%60;
  $('#countdown').textContent=[hours,minutes,seconds].map(n=>String(n).padStart(2,'0')).join(':');
- $('#timer-caption').textContent=`Estimated · about every ${timing.intervalHours} ${timing.intervalHours===1?'hour':'hours'}`;
+ $('#timer-caption').textContent=`Estimated · about every ${timing.intervalMinutes} minutes`;
 }
 function renderSummary() {
  const open=data.leads.filter(l=>l.actionable).length;
