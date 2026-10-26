@@ -2,7 +2,7 @@ import { scanTiming } from '/schedule.js';
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const statuses = ['Not contacted','Contacted','Replied','Not a fit','Matched'];
-let data = { leads: [], scans: [] }, activeId = null, lastFocus, toastTimer, loading = false;
+let data = { leads: [], scans: [] }, activeId = null, lastFocus, toastTimer, loading = false, connection = 'loading';
 const time = (date, detailed = false) => date ? new Date(date).toLocaleString('en-US', { timeZone:'America/Chicago', month:'short', day:'numeric', ...(detailed ? {year:'numeric'} : {}), hour:'numeric', minute:'2-digit' }) : 'Not verified';
 const day = date => date ? new Date(date).toLocaleDateString('en-US', {timeZone:'America/Chicago', month:'short',day:'numeric'}) : 'Unconfirmed';
 const statusName = lead => ({open:'Open',closed:'Closed',outside:'Outside US scope',excluded:'Excluded',unconfirmed:'Needs verification'}[lead.state]);
@@ -17,8 +17,13 @@ function showView() {
 }
 function updateCountdown() {
  const last=data.lastSearch;
+ $('#countdown').classList.toggle('bad',connection==='error');
+ if(connection!=='ready'){
+  $('#countdown').textContent=connection==='error'?'Disconnected':'Loading…';
+  $('#timer-caption').textContent=connection==='error'?'Cannot reach the local tracker · retrying automatically':'Reading saved scan history';return;
+ }
  const timing=scanTiming(last);
- if(!last){$('#countdown').textContent='Not scheduled';$('#timer-caption').textContent='No previous scan recorded';return;}
+ if(!last){$('#countdown').textContent='No scan history';$('#timer-caption').textContent='No saved check to estimate the next scan';return;}
  const next=timing.nextAt;
  const remaining=Math.max(0,Math.ceil((next-Date.now())/1000));
  if(!remaining){$('#countdown').textContent='Due now';$('#countdown').classList.add('bad');$('#timer-caption').textContent='Waiting for the next Cody check';return;}
@@ -32,7 +37,8 @@ function renderSummary() {
  $('#total-count').textContent=data.leads.length;
  $('#scan-count').textContent=data.scans.length;
  $('#last-search').textContent=data.lastSearch?`${time(data.lastSearch.at)} CT`:'No scans yet';
- $('#scan-summary').textContent=`${open} verified open US hosts · ${data.leads.length} tracked posts`;
+ $('#scan-summary').textContent=connection==='error'?'Connection lost · saved records have not been deleted':`${open} verified open US hosts · ${data.leads.length} tracked posts`;
+ if(connection==='error'&&!data.lastSearch){$('#total-count').textContent='—';$('#last-search').textContent='Unavailable';}
  updateCountdown();
 }
 function renderLeads() {
@@ -87,8 +93,8 @@ function closeDrawer(){activeId=null;$('#drawer').hidden=true;$('#drawer-backdro
 async function persist(id,outreach,userNotes){const r=await fetch(`/api/leads/${encodeURIComponent(id)}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({outreach,userNotes})});const saved=await r.json();if(!r.ok)throw new Error(saved.error||'Could not save your changes.');Object.assign(data.leads.find(l=>l.id===id),saved);}
 async function refresh(manual=false){
  if(loading)return;loading=true;$('#refresh').disabled=true;
- try{const r=await fetch('/api/data',{cache:'no-store'});if(!r.ok)throw new Error('Could not read the local tracker.');data=await r.json();renderSummary();renderLeads();renderScans();if(manual)toast('Showing the latest saved records.');}
- catch(e){toast('Could not load the tracker. Check that the local server is running.',true);if(!data.leads.length)$('#lead-list').innerHTML='<tr><td colspan="7" class="empty">Could not load the tracker. Use Reload to try again.</td></tr>';}
+ try{const r=await fetch('/api/data',{cache:'no-store'});if(!r.ok)throw new Error('Could not read the local tracker.');data=await r.json();connection='ready';renderSummary();renderLeads();renderScans();if(manual)toast('Showing the latest saved records.');}
+ catch(e){connection='error';renderSummary();toast('Could not load the tracker. Check that the local server is running.',true);if(!data.leads.length)$('#lead-list').innerHTML='<tr><td colspan="7" class="empty">Could not load the tracker. Use Reload to try again.</td></tr>';}
  finally{loading=false;$('#refresh').disabled=false;}
 }
 $('#search').oninput=renderLeads;$('#filter').onchange=renderLeads;
