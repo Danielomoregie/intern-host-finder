@@ -16,7 +16,7 @@ Open [http://127.0.0.1:4317](http://127.0.0.1:4317). `npm start` runs the server
 
 Double-click `Start Intern Host Finder.command`, or run `npm run background:install`. The launcher installs a per-user macOS LaunchAgent, starts the website immediately, and opens it in your browser. You can close the launcher and ChatGPT; macOS starts the website at login and restarts it if it crashes. Keep this project folder and Node.js in place. After downloading, you may need to run `chmod +x "Start Intern Host Finder.command"` once.
 
-Use `npm run background:status` to check the service or `npm run background:uninstall` to stop it and remove automatic startup. Uninstalling the service keeps your leads and notes. Logs stay in the ignored `work/server.log` and `work/server-error.log` files. The service listens only on `127.0.0.1:4317`, with no public hosting or external dependencies.
+Use `npm run background:status` to check the service or `npm run background:uninstall` to stop it and remove automatic startup. Uninstalling the service keeps your leads and notes. Service logs stay in `~/Library/Logs/Intern Host Finder/`, outside the protected Documents startup paths. The service starts without changing into the project directory and listens only on `127.0.0.1:4317`, with no public hosting or external dependencies.
 
 The Mac must be on and logged into your account; the website is unavailable while the computer sleeps or is shut down. **This background service keeps the website available, but it does not search LinkedIn.** The existing signed-in Cody scan task still needs the ChatGPT desktop app running. A closed app can leave the scan countdown overdue; reloading the website only shows the latest saved results.
 

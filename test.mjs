@@ -60,3 +60,47 @@ test('scan cadence is every 30 minutes immediately and stays consistent across D
  assert.deepEqual(scanTiming(null),{intervalMinutes:30,nextAt:null});
  assert.deepEqual(scanTiming({at:'invalid'}),{intervalMinutes:30,nextAt:null});
 });
+
+test('macOS service can initialize without opening protected project startup paths',async()=>{
+ const {servicePlist}=await import('./macos-service.mjs');
+ const plist=servicePlist('/Users/example/Documents/Tracker','/usr/local/bin/node','/Users/example/Library/Logs/Tracker & Notes');
+ assert(!plist.includes('<key>WorkingDirectory</key>'));
+ assert(plist.includes('/Users/example/Documents/Tracker/server.mjs'));
+ assert(plist.includes('/Users/example/Library/Logs/Tracker &amp; Notes/server.log'));
+ assert(plist.includes('/Users/example/Library/Logs/Tracker &amp; Notes/server-error.log'));
+ assert(plist.includes('<key>KeepAlive</key><true/>'));
+});
+
+test('a failed initial load reports disconnection and recovers without claiming the schedule is gone',async()=>{
+ const vm=await import('node:vm');
+ const {scanTiming}=await import('./public/schedule.js');
+ const elements=new Map();
+ const element=selector=>{
+  if(!elements.has(selector))elements.set(selector,{textContent:'',innerHTML:'',value:selector==='#filter'?'all':'',classList:{toggle(){},add(){},remove(){}}});
+  return elements.get(selector);
+ };
+ let response;
+ const context=vm.createContext({scanTiming,console,Date,setTimeout:()=>0,clearTimeout(){},setInterval(){},location:{hash:'#leads'},window:{addEventListener(){}},document:{querySelector:element,querySelectorAll:()=>[],addEventListener(){}},fetch:async()=>{if(!response)throw new Error('Server offline');return {ok:true,json:async()=>structuredClone(response)};}});
+ const source=(await fs.readFile(new URL('./public/app.js',import.meta.url),'utf8')).replace("import { scanTiming } from '/schedule.js';",'');
+ vm.runInContext(source,context);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(element('#countdown').textContent,'Disconnected');
+ assert.equal(element('#last-search').textContent,'Unavailable');
+ assert.equal(element('#total-count').textContent,'—');
+ assert.match(element('#timer-caption').textContent,/retrying automatically/);
+ response={leads:[],scans:[{at:'2026-10-26T21:18:00Z',result:'Synthetic saved scan'}],lastSearch:{at:'2026-10-26T21:18:00Z'}};
+ await vm.runInContext('refresh()',context);
+ assert.equal(element('#total-count').textContent,0);
+ assert.equal(element('#scan-count').textContent,1);
+ assert.notEqual(element('#countdown').textContent,'Disconnected');
+ assert.match(element('#scan-summary').textContent,/0 tracked posts/);
+ const previousScan=element('#last-search').textContent;
+ response=null;
+ await vm.runInContext('refresh()',context);
+ assert.equal(element('#countdown').textContent,'Disconnected');
+ assert.equal(element('#scan-count').textContent,1);
+ assert.equal(element('#last-search').textContent,previousScan);
+ response={leads:[],scans:[],lastSearch:null};
+ await vm.runInContext('refresh()',context);
+ assert.equal(element('#countdown').textContent,'No scan history');
+});

@@ -7,25 +7,25 @@ import { spawnSync } from 'node:child_process';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const label = 'com.daniel.intern-host-finder';
 const target = `gui/${process.getuid?.()}/${label}`;
+const logDirectory = path.join(os.homedir(), 'Library', 'Logs', 'Intern Host Finder');
 const plistPath = path.join(os.homedir(), 'Library', 'LaunchAgents', `${label}.plist`);
 const escapeXML = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 
 // macOS owns this process, independently of the terminal or ChatGPT session.
-export function servicePlist(directory = root, node = process.execPath) {
+export function servicePlist(directory = root, node = process.execPath, logs = logDirectory) {
   const text = value => `<string>${escapeXML(value)}</string>`;
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key>${text(label)}
 <key>ProgramArguments</key><array>${text(node)}${text(path.join(directory, 'server.mjs'))}</array>
-<key>WorkingDirectory</key>${text(directory)}
 <key>EnvironmentVariables</key><dict><key>PORT</key>${text('4317')}</dict>
 <key>RunAtLoad</key><true/>
 <key>KeepAlive</key><true/>
 <key>ThrottleInterval</key><integer>10</integer>
 <key>ProcessType</key>${text('Background')}
-<key>StandardOutPath</key>${text(path.join(directory, 'work', 'server.log'))}
-<key>StandardErrorPath</key>${text(path.join(directory, 'work', 'server-error.log'))}
+<key>StandardOutPath</key>${text(path.join(logs, 'server.log'))}
+<key>StandardErrorPath</key>${text(path.join(logs, 'server-error.log'))}
 </dict></plist>
 `;
 }
@@ -43,7 +43,7 @@ async function ready() {
     } catch {}
     await new Promise(resolve => setTimeout(resolve, 250));
   }
-  throw new Error(`The background server did not become ready. Check ${path.join(root, 'work', 'server-error.log')}`);
+  throw new Error(`The background server did not become ready. Check ${path.join(logDirectory, 'server-error.log')}`);
 }
 async function main(action) {
   if (process.platform !== 'darwin') throw new Error('This background service is for macOS. Use npm start on other systems.');
@@ -63,7 +63,8 @@ async function main(action) {
     return;
   }
   await fs.mkdir(path.dirname(plistPath), {recursive: true});
-  await fs.mkdir(path.join(root, 'work'), {recursive: true});
+  // launchd must open logs before Node starts. Documents can be protected at that stage.
+  await fs.mkdir(logDirectory, {recursive: true});
   const contents = servicePlist();
   const existing = await fs.readFile(plistPath, 'utf8').catch(error => {
     if (error.code !== 'ENOENT') throw error;
